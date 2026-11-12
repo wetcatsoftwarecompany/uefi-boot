@@ -1,0 +1,3 @@
+build/
+esp/
+ovmf_vars.fd
