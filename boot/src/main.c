@@ -1,568 +1,61 @@
-/* base types */
-typedef unsigned long long  UINT64;
-typedef unsigned int        UINT32;
-typedef unsigned short      CHAR16;
-typedef unsigned char       BOOLEAN;
-typedef UINT64              UINTN;
-typedef UINTN               EFI_STATUS;
-typedef void               *EFI_HANDLE;
-typedef UINTN               EFI_TPL;
-
-
-#define IN
-#define OUT
-#define EFIAPI __attribute__((ms_abi))
-
-/* forward declarations */
-typedef struct EFI_SIMPLE_TEXT_INPUT_PROTOCOL  EFI_SIMPLE_TEXT_INPUT_PROTOCOL;
-typedef struct EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL;
-typedef struct EFI_RUNTIME_SERVICES            EFI_RUNTIME_SERVICES;
-typedef struct EFI_BOOT_SERVICES               EFI_BOOT_SERVICES;
-typedef struct EFI_CONFIGURATION_TABLE         EFI_CONFIGURATION_TABLE;
-
-typedef struct {
-  UINT64      Signature;
-  UINT32      Revision;
-  UINT32      HeaderSize;
-  UINT32      CRC32;
-  UINT32      Reserved;
-} EFI_TABLE_HEADER;
-
-typedef struct {
-  EFI_TABLE_HEADER                 Hdr;
-  CHAR16                           *FirmwareVendor;
-  UINT32                           FirmwareRevision;
-  EFI_HANDLE                       ConsoleInHandle;
-  EFI_SIMPLE_TEXT_INPUT_PROTOCOL   *ConIn;
-  EFI_HANDLE                       ConsoleOutHandle;
-  EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL  *ConOut;
-  EFI_HANDLE                       StandardErrorHandle;
-  EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL  *StdErr;
-  EFI_RUNTIME_SERVICES             *RuntimeServices;
-  EFI_BOOT_SERVICES                *BootServices;
-  UINTN                            NumberOfTableEntries;
-  EFI_CONFIGURATION_TABLE          *ConfigurationTable;
-} EFI_SYSTEM_TABLE;
-
-_Static_assert(sizeof(EFI_SYSTEM_TABLE) == 120, "EFI_SYSTEM_TABLE layout wrong");
-
-/* Simple Text Output Protocol */
-typedef EFI_STATUS (EFIAPI *EFI_TEXT_RESET)(
-  IN EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL *This,
-  IN BOOLEAN                         ExtendedVerification);
-
-typedef EFI_STATUS (EFIAPI *EFI_TEXT_STRING)(
-  IN EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL *This,
-  IN CHAR16                          *String);
-
-struct EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL {
-  EFI_TEXT_RESET   Reset;
-  EFI_TEXT_STRING  OutputString;
-  void            *TestString;         /* placeholders until you need them */
-  void            *QueryMode;
-  void            *SetMode;
-  void            *SetAttribute;
-  void            *ClearScreen;
-  void            *SetCursorPosition;
-  void            *EnableCursor;
-  void            *Mode;
-};
-
-//typedefs for boot services
-
-typedef EFI_TPL (EFIAPI *EFI_RAISE_TPL)(IN EFI_TPL NewTpl);
-typedef void (EFIAPI *EFI_RESTORE_TPL) (IN EFI_TPL OldTpl);
-//******************************************************
-//EFI_ALLOCATE_TYPE
-//******************************************************
-// These types are discussed in the "Description" section below.
-typedef enum {
-   AllocateAnyPages,
-   AllocateMaxAddress,
-   AllocateAddress,
-   MaxAllocateType
-} EFI_ALLOCATE_TYPE;
-
-//******************************************************
-//EFI_MEMORY_TYPE
-//******************************************************
-// These type values are discussed in Memory Type Usage before ExitBootServices()  and  Memory Type Usage after ExitBootServices().
-typedef enum {
-   EfiReservedMemoryType,
-   EfiLoaderCode,
-   EfiLoaderData,
-   EfiBootServicesCode,
-   EfiBootServicesData,
-   EfiRuntimeServicesCode,
-   EfiRuntimeServicesData,
-   EfiConventionalMemory,
-   EfiUnusableMemory,
-   EfiACPIReclaimMemory,
-   EfiACPIMemoryNVS,
-   EfiMemoryMappedIO,
-   EfiMemoryMappedIOPortSpace,
-   EfiPalCode,
-   EfiPersistentMemory,
-   EfiUnacceptedMemoryType,
-   EfiMaxMemoryType
-} EFI_MEMORY_TYPE;
-
-//******************************************************
-//EFI_PHYSICAL_ADDRESS
-//******************************************************
-typedef UINT64 EFI_PHYSICAL_ADDRESS;
-
-typedef EFI_STATUS (EFIAPI *EFI_ALLOCATE_PAGES) (
-   IN EFI_ALLOCATE_TYPE                   Type,
-   IN EFI_MEMORY_TYPE                     MemoryType,
-   IN UINTN                               Pages,
-   IN OUT EFI_PHYSICAL_ADDRESS            *Memory
-   );
-
-//******************************************************
-// Supporting types
-//******************************************************
-typedef void                VOID;
-typedef unsigned char       UINT8;
-typedef unsigned short      UINT16;
-typedef UINT64              EFI_VIRTUAL_ADDRESS;
-typedef void               *EFI_EVENT;
-
-typedef struct {
-  UINT32  Data1;
-  UINT16  Data2;
-  UINT16  Data3;
-  UINT8   Data4[8];
-} EFI_GUID;
-
-typedef struct {
-  UINT32                Type;
-  EFI_PHYSICAL_ADDRESS  PhysicalStart;
-  EFI_VIRTUAL_ADDRESS   VirtualStart;
-  UINT64                NumberOfPages;
-  UINT64                Attribute;
-} EFI_MEMORY_DESCRIPTOR;
-
-typedef struct {
-  UINT8  Type;
-  UINT8  SubType;
-  UINT8  Length[2];
-} EFI_DEVICE_PATH_PROTOCOL;
-
-typedef enum {
-  TimerCancel,
-  TimerPeriodic,
-  TimerRelative
-} EFI_TIMER_DELAY;
-
-typedef enum {
-  EFI_NATIVE_INTERFACE
-} EFI_INTERFACE_TYPE;
-
-typedef enum {
-  AllHandles,
-  ByRegisterNotify,
-  ByProtocol
-} EFI_LOCATE_SEARCH_TYPE;
-
-typedef struct {
-  EFI_HANDLE  AgentHandle;
-  EFI_HANDLE  ControllerHandle;
-  UINT32      Attributes;
-  UINT32      OpenCount;
-} EFI_OPEN_PROTOCOL_INFORMATION_ENTRY;
-
-typedef VOID (EFIAPI *EFI_EVENT_NOTIFY)(
-   IN EFI_EVENT                           Event,
-   IN VOID                                *Context
-   );
-
-//******************************************************
-// Memory Services
-//******************************************************
-typedef EFI_STATUS (EFIAPI *EFI_FREE_PAGES) (
-   IN EFI_PHYSICAL_ADDRESS                Memory,
-   IN UINTN                               Pages
-   );
-
-typedef EFI_STATUS (EFIAPI *EFI_GET_MEMORY_MAP) (
-   IN OUT UINTN                           *MemoryMapSize,
-   OUT EFI_MEMORY_DESCRIPTOR              *MemoryMap,
-   OUT UINTN                              *MapKey,
-   OUT UINTN                              *DescriptorSize,
-   OUT UINT32                             *DescriptorVersion
-   );
-
-typedef EFI_STATUS (EFIAPI *EFI_ALLOCATE_POOL) (
-   IN EFI_MEMORY_TYPE                     PoolType,
-   IN UINTN                               Size,
-   OUT VOID                               **Buffer
-   );
-
-typedef EFI_STATUS (EFIAPI *EFI_FREE_POOL) (
-   IN VOID                                *Buffer
-   );
-
-//******************************************************
-// Event & Timer Services
-//******************************************************
-typedef EFI_STATUS (EFIAPI *EFI_CREATE_EVENT) (
-   IN UINT32                              Type,
-   IN EFI_TPL                             NotifyTpl,
-   IN EFI_EVENT_NOTIFY                    NotifyFunction,   /* OPTIONAL */
-   IN VOID                                *NotifyContext,   /* OPTIONAL */
-   OUT EFI_EVENT                          *Event
-   );
-
-typedef EFI_STATUS (EFIAPI *EFI_SET_TIMER) (
-   IN EFI_EVENT                           Event,
-   IN EFI_TIMER_DELAY                     Type,
-   IN UINT64                              TriggerTime
-   );
-
-typedef EFI_STATUS (EFIAPI *EFI_WAIT_FOR_EVENT) (
-   IN UINTN                               NumberOfEvents,
-   IN EFI_EVENT                           *Event,
-   OUT UINTN                              *Index
-   );
-
-typedef EFI_STATUS (EFIAPI *EFI_SIGNAL_EVENT) (
-   IN EFI_EVENT                           Event
-   );
-
-typedef EFI_STATUS (EFIAPI *EFI_CLOSE_EVENT) (
-   IN EFI_EVENT                           Event
-   );
-
-typedef EFI_STATUS (EFIAPI *EFI_CHECK_EVENT) (
-   IN EFI_EVENT                           Event
-   );
-
-typedef EFI_STATUS (EFIAPI *EFI_CREATE_EVENT_EX) (
-   IN UINT32                              Type,
-   IN EFI_TPL                             NotifyTpl,
-   IN EFI_EVENT_NOTIFY                    NotifyFunction,   /* OPTIONAL */
-   IN const VOID                          *NotifyContext,   /* OPTIONAL */
-   IN const EFI_GUID                      *EventGroup,      /* OPTIONAL */
-   OUT EFI_EVENT                          *Event
-   );
-
-//******************************************************
-// Protocol Handler Services
-//******************************************************
-typedef EFI_STATUS (EFIAPI *EFI_INSTALL_PROTOCOL_INTERFACE) (
-   IN OUT EFI_HANDLE                      *Handle,
-   IN EFI_GUID                            *Protocol,
-   IN EFI_INTERFACE_TYPE                  InterfaceType,
-   IN VOID                                *Interface
-   );
-
-typedef EFI_STATUS (EFIAPI *EFI_REINSTALL_PROTOCOL_INTERFACE) (
-   IN EFI_HANDLE                          Handle,
-   IN EFI_GUID                            *Protocol,
-   IN VOID                                *OldInterface,
-   IN VOID                                *NewInterface
-   );
-
-typedef EFI_STATUS (EFIAPI *EFI_UNINSTALL_PROTOCOL_INTERFACE) (
-   IN EFI_HANDLE                          Handle,
-   IN EFI_GUID                            *Protocol,
-   IN VOID                                *Interface
-   );
-
-typedef EFI_STATUS (EFIAPI *EFI_HANDLE_PROTOCOL) (
-   IN EFI_HANDLE                          Handle,
-   IN EFI_GUID                            *Protocol,
-   OUT VOID                               **Interface
-   );
-
-typedef EFI_STATUS (EFIAPI *EFI_REGISTER_PROTOCOL_NOTIFY) (
-   IN EFI_GUID                            *Protocol,
-   IN EFI_EVENT                           Event,
-   OUT VOID                               **Registration
-   );
-
-typedef EFI_STATUS (EFIAPI *EFI_LOCATE_HANDLE) (
-   IN EFI_LOCATE_SEARCH_TYPE              SearchType,
-   IN EFI_GUID                            *Protocol,        /* OPTIONAL */
-   IN VOID                                *SearchKey,       /* OPTIONAL */
-   IN OUT UINTN                           *BufferSize,
-   OUT EFI_HANDLE                         *Buffer
-   );
-
-typedef EFI_STATUS (EFIAPI *EFI_LOCATE_DEVICE_PATH) (
-   IN EFI_GUID                            *Protocol,
-   IN OUT EFI_DEVICE_PATH_PROTOCOL        **DevicePath,
-   OUT EFI_HANDLE                         *Device
-   );
-
-typedef EFI_STATUS (EFIAPI *EFI_INSTALL_CONFIGURATION_TABLE) (
-   IN EFI_GUID                            *Guid,
-   IN VOID                                *Table
-   );
-
-//******************************************************
-// Image Services
-//******************************************************
-typedef EFI_STATUS (EFIAPI *EFI_IMAGE_LOAD) (
-   IN BOOLEAN                             BootPolicy,
-   IN EFI_HANDLE                          ParentImageHandle,
-   IN EFI_DEVICE_PATH_PROTOCOL            *DevicePath,      /* OPTIONAL */
-   IN VOID                                *SourceBuffer,    /* OPTIONAL */
-   IN UINTN                               SourceSize,
-   OUT EFI_HANDLE                         *ImageHandle
-   );
-
-typedef EFI_STATUS (EFIAPI *EFI_IMAGE_START) (
-   IN EFI_HANDLE                          ImageHandle,
-   OUT UINTN                              *ExitDataSize,
-   OUT CHAR16                             **ExitData        /* OPTIONAL */
-   );
-
-typedef EFI_STATUS (EFIAPI *EFI_EXIT) (
-   IN EFI_HANDLE                          ImageHandle,
-   IN EFI_STATUS                          ExitStatus,
-   IN UINTN                               ExitDataSize,
-   IN CHAR16                              *ExitData         /* OPTIONAL */
-   );
-
-typedef EFI_STATUS (EFIAPI *EFI_IMAGE_UNLOAD) (
-   IN EFI_HANDLE                          ImageHandle
-   );
-
-typedef EFI_STATUS (EFIAPI *EFI_EXIT_BOOT_SERVICES) (
-   IN EFI_HANDLE                          ImageHandle,
-   IN UINTN                               MapKey
-   );
-
-//******************************************************
-// Miscellaneous Services
-//******************************************************
-typedef EFI_STATUS (EFIAPI *EFI_GET_NEXT_MONOTONIC_COUNT) (
-   OUT UINT64                             *Count
-   );
-
-typedef EFI_STATUS (EFIAPI *EFI_STALL) (
-   IN UINTN                               Microseconds
-   );
-
-typedef EFI_STATUS (EFIAPI *EFI_SET_WATCHDOG_TIMER) (
-   IN UINTN                               Timeout,
-   IN UINT64                              WatchdogCode,
-   IN UINTN                               DataSize,
-   IN CHAR16                              *WatchdogData     /* OPTIONAL */
-   );
-
-typedef VOID (EFIAPI *EFI_COPY_MEM) (
-   IN VOID                                *Destination,
-   IN VOID                                *Source,
-   IN UINTN                               Length
-   );
-
-typedef VOID (EFIAPI *EFI_SET_MEM) (
-   IN VOID                                *Buffer,
-   IN UINTN                               Size,
-   IN UINT8                               Value
-   );
-
-typedef EFI_STATUS (EFIAPI *EFI_CALCULATE_CRC32) (
-   IN VOID                                *Data,
-   IN UINTN                               DataSize,
-   OUT UINT32                             *Crc32
-   );
-
-//******************************************************
-// Driver Support Services
-//******************************************************
-typedef EFI_STATUS (EFIAPI *EFI_CONNECT_CONTROLLER) (
-   IN EFI_HANDLE                          ControllerHandle,
-   IN EFI_HANDLE                          *DriverImageHandle,   /* OPTIONAL */
-   IN EFI_DEVICE_PATH_PROTOCOL            *RemainingDevicePath, /* OPTIONAL */
-   IN BOOLEAN                             Recursive
-   );
-
-typedef EFI_STATUS (EFIAPI *EFI_DISCONNECT_CONTROLLER) (
-   IN EFI_HANDLE                          ControllerHandle,
-   IN EFI_HANDLE                          DriverImageHandle,    /* OPTIONAL */
-   IN EFI_HANDLE                          ChildHandle           /* OPTIONAL */
-   );
-
-//******************************************************
-// Open and Close Protocol Services
-//******************************************************
-typedef EFI_STATUS (EFIAPI *EFI_OPEN_PROTOCOL) (
-   IN EFI_HANDLE                          Handle,
-   IN EFI_GUID                            *Protocol,
-   OUT VOID                               **Interface,      /* OPTIONAL */
-   IN EFI_HANDLE                          AgentHandle,
-   IN EFI_HANDLE                          ControllerHandle,
-   IN UINT32                              Attributes
-   );
-
-typedef EFI_STATUS (EFIAPI *EFI_CLOSE_PROTOCOL) (
-   IN EFI_HANDLE                          Handle,
-   IN EFI_GUID                            *Protocol,
-   IN EFI_HANDLE                          AgentHandle,
-   IN EFI_HANDLE                          ControllerHandle
-   );
-
-typedef EFI_STATUS (EFIAPI *EFI_OPEN_PROTOCOL_INFORMATION) (
-   IN EFI_HANDLE                          Handle,
-   IN EFI_GUID                            *Protocol,
-   OUT EFI_OPEN_PROTOCOL_INFORMATION_ENTRY **EntryBuffer,
-   OUT UINTN                              *EntryCount
-   );
-
-//******************************************************
-// Library Services
-//******************************************************
-typedef EFI_STATUS (EFIAPI *EFI_PROTOCOLS_PER_HANDLE) (
-   IN EFI_HANDLE                          Handle,
-   OUT EFI_GUID                           ***ProtocolBuffer,
-   OUT UINTN                              *ProtocolBufferCount
-   );
-
-typedef EFI_STATUS (EFIAPI *EFI_LOCATE_HANDLE_BUFFER) (
-   IN EFI_LOCATE_SEARCH_TYPE              SearchType,
-   IN EFI_GUID                            *Protocol,        /* OPTIONAL */
-   IN VOID                                *SearchKey,       /* OPTIONAL */
-   OUT UINTN                              *NoHandles,
-   OUT EFI_HANDLE                         **Buffer
-   );
-
-typedef EFI_STATUS (EFIAPI *EFI_LOCATE_PROTOCOL) (
-   IN EFI_GUID                            *Protocol,
-   IN VOID                                *Registration,    /* OPTIONAL */
-   OUT VOID                               **Interface
-   );
-
-typedef EFI_STATUS (EFIAPI *EFI_INSTALL_MULTIPLE_PROTOCOL_INTERFACES) (
-   IN OUT EFI_HANDLE                      *Handle,
-   ...
-   );
-
-typedef EFI_STATUS (EFIAPI *EFI_UNINSTALL_MULTIPLE_PROTOCOL_INTERFACES) (
-   IN EFI_HANDLE                          Handle,
-   ...
-   );
-
-struct EFI_BOOT_SERVICES {
-  EFI_TABLE_HEADER     Hdr;
-
-  //
-  // Task Priority Services
-  //
-  EFI_RAISE_TPL        RaiseTPL;       // EFI 1.0+
-  EFI_RESTORE_TPL      RestoreTPL;     // EFI 1.0+
-
-    //
-    // Memory Services
-    //
-    EFI_ALLOCATE_PAGES   AllocatePages;  // EFI 1.0+
-    EFI_FREE_PAGES       FreePages;      // EFI 1.0+
-    EFI_GET_MEMORY_MAP   GetMemoryMap;   // EFI 1.0+
-    EFI_ALLOCATE_POOL    AllocatePool;   // EFI 1.0+
-    EFI_FREE_POOL        FreePool;       // EFI 1.0+
-
-    //
-    // Event & Timer Services
-    //
-    EFI_CREATE_EVENT     CreateEvent;    // EFI 1.0+
-    EFI_SET_TIMER        SetTimer;       // EFI 1.0+
-    EFI_WAIT_FOR_EVENT   WaitForEvent;   // EFI 1.0+
-    EFI_SIGNAL_EVENT     SignalEvent;    // EFI 1.0+
-    EFI_CLOSE_EVENT      CloseEvent;     // EFI 1.0+
-    EFI_CHECK_EVENT      CheckEvent;     // EFI 1.0+
-
-    //
-    // Protocol Handler Services
-    //
-    EFI_INSTALL_PROTOCOL_INTERFACE     InstallProtocolInterface;            // EFI 1.0+
-    EFI_REINSTALL_PROTOCOL_INTERFACE   ReinstallProtocolInterface;          // EFI 1.0+
-    EFI_UNINSTALL_PROTOCOL_INTERFACE   UninstallProtocolInterface;          // EFI 1.0+
-    EFI_HANDLE_PROTOCOL                HandleProtocol;                      // EFI 1.0+
- VOID*   Reserved;    // EFI 1.0+
-    EFI_REGISTER_PROTOCOL_NOTIFY       RegisterProtocolNotify;              // EFI  1.0+
-    EFI_LOCATE_HANDLE                  LocateHandle;                        // EFI 1.0+
-    EFI_LOCATE_DEVICE_PATH             LocateDevicePath;                    // EFI 1.0+
- EFI_INSTALL_CONFIGURATION_TABLE       InstallConfigurationTable;           // EFI 1.0+
-
-    //
-    // Image Services
-    //
-    EFI_IMAGE_LOAD                 LoadImage;        // EFI 1.0+
-    EFI_IMAGE_START                StartImage;       // EFI 1.0+
-    EFI_EXIT                       Exit;             // EFI 1.0+
-    EFI_IMAGE_UNLOAD               UnloadImage;      // EFI 1.0+
-    EFI_EXIT_BOOT_SERVICES         ExitBootServices; // EFI 1.0+
-
-    //
-    // Miscellaneous Services
-    //
-    EFI_GET_NEXT_MONOTONIC_COUNT   GetNextMonotonicCount; // EFI 1.0+
-    EFI_STALL                      Stall;                 // EFI 1.0+
-    EFI_SET_WATCHDOG_TIMER         SetWatchdogTimer;      // EFI 1.0+
-
-    //
-    // DriverSupport Services
-    //
-    EFI_CONNECT_CONTROLLER         ConnectController;     // EFI 1.1
-    EFI_DISCONNECT_CONTROLLER      DisconnectController;  // EFI 1.1+
-
-    //
-    // Open and Close Protocol Services
-    //
-    EFI_OPEN_PROTOCOL              OpenProtocol;           // EFI 1.1+
-    EFI_CLOSE_PROTOCOL             CloseProtocol;          // EFI 1.1+
- EFI_OPEN_PROTOCOL_INFORMATION     OpenProtocolInformation;// EFI 1.1+
-
-    //
-    // Library Services
-    //
-    EFI_PROTOCOLS_PER_HANDLE       ProtocolsPerHandle;     // EFI 1.1+
-    EFI_LOCATE_HANDLE_BUFFER       LocateHandleBuffer;     // EFI 1.1+
-    EFI_LOCATE_PROTOCOL            LocateProtocol;         // EFI 1.1+
-  EFI_INSTALL_MULTIPLE_PROTOCOL_INTERFACES    InstallMultipleProtocolInterfaces;    // EFI 1.1+
-  EFI_UNINSTALL_MULTIPLE_PROTOCOL_INTERFACES UninstallMultipleProtocolInterfaces;   // EFI 1.1+*
-
-    //
-    // 32-bit CRC Services
-    //
-    EFI_CALCULATE_CRC32    CalculateCrc32;     // EFI 1.1+
-
-    //
-    // Miscellaneous Services
-    //
-    EFI_COPY_MEM           CopyMem;        // EFI 1.1+
-    EFI_SET_MEM            SetMem;         // EFI 1.1+
-    EFI_CREATE_EVENT_EX    CreateEventEx;  // UEFI 2.0+
-  };
-
-_Static_assert(sizeof(EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL) == 80, "TEXT_OUTPUT layout wrong");
-
-/* Loaded Image Protocol */
-typedef struct {
-  UINT32                    Revision;
-  EFI_HANDLE                ParentHandle;
-  EFI_SYSTEM_TABLE          *SystemTable;
-  EFI_HANDLE                DeviceHandle;
-  EFI_DEVICE_PATH_PROTOCOL  *FilePath;
-  VOID                      *Reserved;
-  UINT32                    LoadOptionsSize;
-  VOID                      *LoadOptions;
-  VOID                      *ImageBase;
-  UINT64                    ImageSize;
-  EFI_MEMORY_TYPE           ImageCodeType;
-  EFI_MEMORY_TYPE           ImageDataType;
-  EFI_IMAGE_UNLOAD          Unload;
-} EFI_LOADED_IMAGE_PROTOCOL;
-
-static EFI_GUID gEfiLoadedImageProtocolGuid =
-  { 0x5B1B31A1, 0x9562, 0x11d2, { 0x8E, 0x3F, 0x00, 0xA0, 0xC9, 0x69, 0x72, 0x3B } };
+#include "efi.h"
+#include "elf.h"
+#include "boot_info.h"
+
+static EFI_GUID gEfiLoadedImageProtocolGuid      = EFI_LOADED_IMAGE_PROTOCOL_GUID;
+static EFI_GUID gEfiSimpleFileSystemProtocolGuid = EFI_SIMPLE_FILE_SYSTEM_PROTOCOL_GUID;
+static EFI_GUID gEfiFileInfoGuid                 = EFI_FILE_INFO_ID;
+static EFI_GUID gEfiGraphicsOutputProtocolGuid   = EFI_GRAPHICS_OUTPUT_PROTOCOL_GUID;
+static EFI_GUID gEfiAcpi20TableGuid              = EFI_ACPI_20_TABLE_GUID;
+
+/* The kernel is an ELF built for the System V ABI, while this bootloader
+ * uses the Microsoft ABI by default, so the call must say which one. */
+typedef void (__attribute__((sysv_abi)) *KERNEL_ENTRY)(BootInfo *info);
+
+#define PAGE_SIZE 4096ULL
 
 static EFI_SYSTEM_TABLE  *gST;
 static EFI_HANDLE         gImageHandle;
 static EFI_BOOT_SERVICES *gBS;
+
+/* ---------------------------------------------------------------- output */
+
+static void print(CHAR16 *s)
+{
+  gST->ConOut->OutputString(gST->ConOut, s);
+}
+
+static void print_hex(UINT64 value)
+{
+  CHAR16 buf[19];                      /* "0x" + 16 digits + NUL */
+  buf[0] = L'0';
+  buf[1] = L'x';
+  for (int i = 0; i < 16; i++) {
+    UINT8 nibble = (value >> ((15 - i) * 4)) & 0xF;
+    buf[2 + i] = nibble < 10 ? L'0' + nibble : L'A' + (nibble - 10);
+  }
+  buf[18] = 0;
+  print(buf);
+}
+
+/* Print ASCII bytes: convert to CHAR16 in small chunks, "\n" -> "\r\n". */
+static void print_ascii(UINT8 *buffer, UINTN size)
+{
+  CHAR16 out[65];                      /* room for "\r\n" expansion + NUL */
+  UINTN  n = 0;
+  for (UINTN i = 0; i < size; i++) {
+    if (buffer[i] == '\n' && (i == 0 || buffer[i - 1] != '\r'))
+      out[n++] = L'\r';
+    out[n++] = (CHAR16)buffer[i];
+    if (n >= 62) {                     /* flush before the chunk fills up */
+      out[n] = 0;
+      print(out);
+      n = 0;
+    }
+  }
+  out[n] = 0;
+  print(out);
+}
 
 /* Print the file name parts of a device path.
  * A device path is a list of variable-length nodes; each starts with
@@ -575,13 +68,230 @@ static void print_file_path(EFI_DEVICE_PATH_PROTOCOL *node)
     UINT16 length = node->Length[0] | (node->Length[1] << 8);
 
     if (node->Type == 4 && node->SubType == 4)
-      gST->ConOut->OutputString(gST->ConOut, (CHAR16 *)((UINT8 *)node + 4));
+      print((CHAR16 *)((UINT8 *)node + 4));
 
     if (length < 4)
       break;    /* malformed node, avoid looping forever */
     node = (EFI_DEVICE_PATH_PROTOCOL *)((UINT8 *)node + length);
   }
 }
+
+/* ----------------------------------------------------------------- files */
+
+/* Read a whole file into a pool buffer. On success the caller owns
+ * *out_buffer (free it with FreePool; it is 0 for an empty file). */
+static EFI_STATUS read_file(EFI_FILE_PROTOCOL *root, CHAR16 *path,
+                            UINT8 **out_buffer, UINTN *out_size)
+{
+  EFI_FILE_PROTOCOL *file = 0;
+  EFI_STATUS status = root->Open(root, &file, path, EFI_FILE_MODE_READ, 0);
+  if (status != EFI_SUCCESS)
+    return status;
+
+  /* get the file size: first call with size 0 to learn how big EFI_FILE_INFO is */
+  UINTN info_size = 0;
+  EFI_FILE_INFO *info = 0;
+  status = file->GetInfo(file, &gEfiFileInfoGuid, &info_size, 0);
+  if (status == EFI_BUFFER_TOO_SMALL) {
+    status = gBS->AllocatePool(EfiLoaderData, info_size, (VOID **)&info);
+    if (status == EFI_SUCCESS)
+      status = file->GetInfo(file, &gEfiFileInfoGuid, &info_size, info);
+  }
+  if (status != EFI_SUCCESS) {
+    if (info)
+      gBS->FreePool(info);
+    file->Close(file);
+    return status;
+  }
+  UINTN size = info->FileSize;         /* in: buffer size, out: bytes read */
+  gBS->FreePool(info);
+
+  /* allocate exactly enough for the whole file */
+  UINT8 *buffer = 0;
+  if (size > 0) {
+    status = gBS->AllocatePool(EfiLoaderData, size, (VOID **)&buffer);
+    if (status == EFI_SUCCESS) {
+      status = file->Read(file, &size, buffer);
+      if (status != EFI_SUCCESS) {
+        gBS->FreePool(buffer);
+        buffer = 0;
+      }
+    }
+  }
+  file->Close(file);
+  if (status != EFI_SUCCESS)
+    return status;
+
+  *out_buffer = buffer;
+  *out_size   = size;
+  return EFI_SUCCESS;
+}
+
+/* ---------------------------------------------------------------- kernel */
+
+/* Copy every PT_LOAD segment of an ELF64 file to its physical address
+ * (p_paddr) and zero the part not stored in the file (.bss).
+ * The memory is reserved with AllocatePages(AllocateAddress) so the
+ * firmware will not hand it out to anyone else. */
+static EFI_STATUS load_kernel(UINT8 *data, UINTN size, UINT64 *entry)
+{
+  Elf64_Ehdr *eh = (Elf64_Ehdr *)data;
+
+  if (size < sizeof(Elf64_Ehdr) ||
+      eh->e_ident[0] != 0x7F || eh->e_ident[1] != 'E' ||
+      eh->e_ident[2] != 'L'  || eh->e_ident[3] != 'F' ||
+      eh->e_ident[EI_CLASS] != ELFCLASS64 ||
+      eh->e_ident[EI_DATA]  != ELFDATA2LSB ||
+      eh->e_type != ET_EXEC || eh->e_machine != EM_X86_64 ||
+      eh->e_phentsize != sizeof(Elf64_Phdr) ||
+      eh->e_phoff > size ||
+      (UINT64)eh->e_phnum * sizeof(Elf64_Phdr) > size - eh->e_phoff) {
+    print(L"kernel.elf is not a valid x86-64 ELF executable\r\n");
+    return EFI_LOAD_ERROR;
+  }
+
+  Elf64_Phdr *ph = (Elf64_Phdr *)(data + eh->e_phoff);
+
+  /* find the physical range covered by all loadable segments */
+  UINT64 lo = ~0ULL, hi = 0;
+  for (UINT16 i = 0; i < eh->e_phnum; i++) {
+    if (ph[i].p_type != PT_LOAD || ph[i].p_memsz == 0)
+      continue;
+    if (ph[i].p_filesz > ph[i].p_memsz ||
+        ph[i].p_offset > size || ph[i].p_filesz > size - ph[i].p_offset) {
+      print(L"kernel.elf has a malformed segment\r\n");
+      return EFI_LOAD_ERROR;
+    }
+    if (ph[i].p_paddr < lo)
+      lo = ph[i].p_paddr;
+    if (ph[i].p_paddr + ph[i].p_memsz > hi)
+      hi = ph[i].p_paddr + ph[i].p_memsz;
+  }
+  if (hi == 0) {
+    print(L"kernel.elf has no loadable segments\r\n");
+    return EFI_LOAD_ERROR;
+  }
+  lo &= ~(PAGE_SIZE - 1);                       /* round down to a page */
+  hi = (hi + PAGE_SIZE - 1) & ~(PAGE_SIZE - 1); /* round up to a page */
+
+  if (eh->e_entry < lo || eh->e_entry >= hi) {
+    print(L"kernel.elf entry point is outside its segments\r\n");
+    return EFI_LOAD_ERROR;
+  }
+
+  EFI_PHYSICAL_ADDRESS base = lo;
+  EFI_STATUS status = gBS->AllocatePages(AllocateAddress, EfiLoaderCode,
+                                         (hi - lo) / PAGE_SIZE, &base);
+  if (status != EFI_SUCCESS) {
+    print(L"Could not reserve memory for the kernel at ");
+    print_hex(lo);
+    print(L"\r\n");
+    return status;
+  }
+
+  gBS->SetMem((VOID *)lo, hi - lo, 0);          /* zeroes .bss as well */
+  for (UINT16 i = 0; i < eh->e_phnum; i++) {
+    if (ph[i].p_type == PT_LOAD && ph[i].p_filesz > 0)
+      gBS->CopyMem((VOID *)ph[i].p_paddr, data + ph[i].p_offset, ph[i].p_filesz);
+  }
+
+  print(L"Kernel loaded at ");
+  print_hex(lo);
+  print(L" - ");
+  print_hex(hi);
+  print(L", entry ");
+  print_hex(eh->e_entry);
+  print(L"\r\n");
+
+  *entry = eh->e_entry;
+  return EFI_SUCCESS;
+}
+
+/* ------------------------------------------------------------- boot info */
+
+static void get_framebuffer(BootFramebuffer *fb)
+{
+  EFI_GRAPHICS_OUTPUT_PROTOCOL *gop = 0;
+  EFI_STATUS status = gBS->LocateProtocol(&gEfiGraphicsOutputProtocolGuid, 0, (VOID **)&gop);
+  if (status != EFI_SUCCESS || !gop) {
+    print(L"No graphics output, kernel gets no framebuffer\r\n");
+    return;
+  }
+
+  EFI_GRAPHICS_OUTPUT_MODE_INFORMATION *mode_info = gop->Mode->Info;
+  if (mode_info->PixelFormat == PixelBltOnly) {
+    print(L"Graphics output has no framebuffer (BltOnly)\r\n");
+    return;
+  }
+
+  fb->base            = gop->Mode->FrameBufferBase;
+  fb->size            = gop->Mode->FrameBufferSize;
+  fb->width           = mode_info->HorizontalResolution;
+  fb->height          = mode_info->VerticalResolution;
+  fb->pixels_per_line = mode_info->PixelsPerScanLine;
+  fb->pixel_format    = mode_info->PixelFormat;
+}
+
+static BOOLEAN guid_equal(EFI_GUID *a, EFI_GUID *b)
+{
+  if (a->Data1 != b->Data1 || a->Data2 != b->Data2 || a->Data3 != b->Data3)
+    return 0;
+  for (int i = 0; i < 8; i++)
+    if (a->Data4[i] != b->Data4[i])
+      return 0;
+  return 1;
+}
+
+/* The ACPI 2.0+ RSDP is published in the system configuration table. */
+static UINT64 find_rsdp(void)
+{
+  for (UINTN i = 0; i < gST->NumberOfTableEntries; i++) {
+    if (guid_equal(&gST->ConfigurationTable[i].VendorGuid, &gEfiAcpi20TableGuid))
+      return (UINT64)gST->ConfigurationTable[i].VendorTable;
+  }
+  return 0;
+}
+
+/* Get the final memory map and leave boot services.
+ * ExitBootServices only succeeds with the map key of the *current* map;
+ * if anything changed the map in between, it fails and we must fetch the
+ * map again. After a failed attempt no allocations or console output are
+ * allowed, so the buffer is allocated up front with some spare room. */
+static EFI_STATUS exit_boot_services(BootMemoryMap *mm)
+{
+  UINTN  map_size = 0, map_key = 0, desc_size = 0;
+  UINT32 desc_version = 0;
+  EFI_MEMORY_DESCRIPTOR *map = 0;
+
+  EFI_STATUS status = gBS->GetMemoryMap(&map_size, 0, &map_key, &desc_size, &desc_version);
+  if (status != EFI_BUFFER_TOO_SMALL)
+    return status;
+
+  /* the allocation itself can add entries to the map, so leave room */
+  UINTN buffer_size = map_size + 8 * desc_size;
+  status = gBS->AllocatePool(EfiLoaderData, buffer_size, (VOID **)&map);
+  if (status != EFI_SUCCESS)
+    return status;
+
+  for (int attempt = 0; attempt < 2; attempt++) {
+    map_size = buffer_size;
+    status = gBS->GetMemoryMap(&map_size, map, &map_key, &desc_size, &desc_version);
+    if (status != EFI_SUCCESS)
+      return status;
+
+    status = gBS->ExitBootServices(gImageHandle, map_key);
+    if (status == EFI_SUCCESS) {
+      mm->map                = (UINT64)map;
+      mm->map_size           = map_size;
+      mm->descriptor_size    = desc_size;
+      mm->descriptor_version = desc_version;
+      return EFI_SUCCESS;
+    }
+  }
+  return status;
+}
+
+/* ------------------------------------------------------------------ main */
 
 EFI_STATUS EFIAPI efi_main(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE *SystemTable)
 {
@@ -592,23 +302,97 @@ EFI_STATUS EFIAPI efi_main(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE *Syste
   gBS = gST->BootServices;
 
   gST->ConOut->Reset(gST->ConOut, 0);
-  gST->ConOut->OutputString(gST->ConOut, L"Loading Molos 1.0.0\r\n");
+  print(L"Loading Molos 1.0.0\r\n");
 
   //get the loaded image
   EFI_LOADED_IMAGE_PROTOCOL *loaded_image = 0;
   EFI_STATUS status = gBS->HandleProtocol(gImageHandle, &gEfiLoadedImageProtocolGuid, (VOID**)&loaded_image);
-  if (status != 0) {
-    gST->ConOut->OutputString(gST->ConOut, L"Failed to get loaded image\r\n");
+  if (status != EFI_SUCCESS) {
+    print(L"Failed to get loaded image\r\n");
     return status;
   }
 
-  gST->ConOut->OutputString(gST->ConOut, L"File path: ");
+  print(L"File path: ");
   if (loaded_image->FilePath)
     print_file_path(loaded_image->FilePath);
   else
-    gST->ConOut->OutputString(gST->ConOut, L"(none)");
-  gST->ConOut->OutputString(gST->ConOut, L"\r\n");
+    print(L"(none)");
+  print(L"\r\n");
 
-  for (;;) { }
+  //open the volume we were loaded from
+  EFI_SIMPLE_FILE_SYSTEM_PROTOCOL *fs = 0;
+  status = gBS->HandleProtocol(loaded_image->DeviceHandle, &gEfiSimpleFileSystemProtocolGuid, (VOID **)&fs);
+  if (status != EFI_SUCCESS || !fs) {
+    print(L"Failed to get file system protocol\r\n");
+    return status ? status : 1;
+  }
+
+  EFI_FILE_PROTOCOL *root = 0;
+  status = fs->OpenVolume(fs, &root);
+  if (status != EFI_SUCCESS) {
+    print(L"Failed to open volume\r\n");
+    return status;
+  }
+
+  //print hello.txt
+  UINT8 *buffer = 0;
+  UINTN  size   = 0;
+  status = read_file(root, L"\\hello.txt", &buffer, &size);
+  if (status == EFI_SUCCESS) {
+    print(L"Contents of \\hello.txt:\r\n");
+    print_ascii(buffer, size);
+    print(L"\r\n");
+    if (buffer)
+      gBS->FreePool(buffer);
+  } else {
+    print(L"Failed to read \\hello.txt\r\n");
+  }
+
+  //read and load the kernel
+  UINT8 *kernel_file = 0;
+  UINTN  kernel_size = 0;
+  status = read_file(root, L"\\kernel.elf", &kernel_file, &kernel_size);
+  root->Close(root);
+  if (status != EFI_SUCCESS || !kernel_file) {
+    print(L"Failed to read \\kernel.elf\r\n");
+    return status ? status : EFI_LOAD_ERROR;
+  }
+
+  UINT64 kernel_entry = 0;
+  status = load_kernel(kernel_file, kernel_size, &kernel_entry);
+  gBS->FreePool(kernel_file);          /* segments are copied, file no longer needed */
+  if (status != EFI_SUCCESS)
+    return status;
+
+  //collect what the kernel needs while boot services still exist
+  BootInfo *info = 0;
+  status = gBS->AllocatePool(EfiLoaderData, sizeof(BootInfo), (VOID **)&info);
+  if (status != EFI_SUCCESS) {
+    print(L"Failed to allocate boot info\r\n");
+    return status;
+  }
+  gBS->SetMem(info, sizeof(BootInfo), 0);
+  info->magic = BOOT_INFO_MAGIC;
+  get_framebuffer(&info->framebuffer);
+  info->rsdp = find_rsdp();
+
+  print(L"Framebuffer ");
+  print_hex(info->framebuffer.base);
+  print(L", RSDP ");
+  print_hex(info->rsdp);
+  print(L"\r\nExiting boot services and starting kernel...\r\n");
+
+  //from here on no UEFI boot services, no console output
+  status = exit_boot_services(&info->memory_map);
+  if (status != EFI_SUCCESS) {
+    for (;;)
+      __asm__ volatile ("cli; hlt");   /* can't report it any more */
+  }
+
+  KERNEL_ENTRY kernel_main = (KERNEL_ENTRY)kernel_entry;
+  kernel_main(info);
+
+  for (;;)                             /* the kernel should never return */
+    __asm__ volatile ("cli; hlt");
   return 0;
 }

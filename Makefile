@@ -1,34 +1,35 @@
 .RECIPEPREFIX = >
 
-CC      := clang
-TARGET  := x86_64-unknown-windows
-CFLAGS  := -target $(TARGET) -std=c11 -ffreestanding -fshort-wchar -mno-red-zone \
-           -fno-stack-protector -mno-stack-arg-probe -Wall -Wextra -g -Iinclude
-LDFLAGS := -target $(TARGET) -nostdlib -fuse-ld=lld-link \
-           -Wl,-entry:efi_main -Wl,-subsystem:efi_application
+# Top level: builds the bootloader and kernel, then assembles the ESP.
+#   make        build everything into esp/
+#   make run    build and boot in QEMU
+#   make clean  remove all build output
 
-SRC := $(wildcard src/*.c)
-OBJ := $(patsubst src/%.c,build/%.o,$(SRC))
-EFI := esp/EFI/BOOT/BOOTX64.EFI
+BOOT_EFI   := boot/build/BOOTX64.EFI
+KERNEL_ELF := kernel/build/kernel.elf
 
 OVMF_CODE := /usr/share/OVMF/OVMF_CODE_4M.fd
 OVMF_VARS := /usr/share/OVMF/OVMF_VARS_4M.fd
 
-all: $(EFI)
+all: esp
 
-build/%.o: src/%.c | build
-> $(CC) $(CFLAGS) -c $< -o $@
+boot:
+> $(MAKE) -C boot
 
-$(EFI): $(OBJ) | esp/EFI/BOOT
-> $(CC) $(LDFLAGS) $^ -o $@
+kernel:
+> $(MAKE) -C kernel
 
-build esp/EFI/BOOT:
-> mkdir -p $@
+# esp/ is generated: files/ holds extra files copied to the ESP root.
+esp: boot kernel
+> mkdir -p esp/EFI/BOOT
+> cp $(BOOT_EFI) esp/EFI/BOOT/BOOTX64.EFI
+> cp $(KERNEL_ELF) esp/kernel.elf
+> cp -r files/. esp/
 
 ovmf_vars.fd:
 > cp $(OVMF_VARS) $@
 
-run: $(EFI) ovmf_vars.fd
+run: esp ovmf_vars.fd
 > qemu-system-x86_64 \
 >   -drive if=pflash,format=raw,readonly=on,file=$(OVMF_CODE) \
 >   -drive if=pflash,format=raw,file=ovmf_vars.fd \
@@ -36,6 +37,8 @@ run: $(EFI) ovmf_vars.fd
 >   -serial stdio -net none
 
 clean:
+> $(MAKE) -C boot clean
+> $(MAKE) -C kernel clean
 > rm -rf build esp ovmf_vars.fd
 
-.PHONY: all run clean
+.PHONY: all boot kernel esp run clean
