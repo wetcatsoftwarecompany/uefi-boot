@@ -15,7 +15,7 @@ ELF := build/kernel.elf
 
 all: $(ELF)
 
-build/%.o: src/%.c ../include/boot_info.h | build
+build/%.o: src/%.c $(wildcard src/*.h) $(wildcard ../include/*.h) | build
 > $(CC) $(CFLAGS) -c $< -o $@
 
 $(ELF): $(OBJ) linker.ld

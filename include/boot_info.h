@@ -23,6 +23,37 @@ typedef struct {
   uint32_t pixel_format;    /* EFI_GRAPHICS_PIXEL_FORMAT from GOP */
 } BootFramebuffer;
 
+/* One entry of the memory map, same layout as EFI_MEMORY_DESCRIPTOR.
+ * Entries are BootMemoryMap.descriptor_size bytes apart, which may be
+ * larger than sizeof(BootMemoryDescriptor): always step by that size. */
+typedef struct {
+  uint32_t type;            /* EFI_MEMORY_TYPE, see BOOT_MEM_* below */
+  uint32_t pad;
+  uint64_t physical_start;
+  uint64_t virtual_start;
+  uint64_t number_of_pages; /* 4 KiB pages */
+  uint64_t attribute;
+} BootMemoryDescriptor;
+
+enum {
+  BOOT_MEM_RESERVED,
+  BOOT_MEM_LOADER_CODE,
+  BOOT_MEM_LOADER_DATA,
+  BOOT_MEM_BOOT_SERVICES_CODE,
+  BOOT_MEM_BOOT_SERVICES_DATA,
+  BOOT_MEM_RUNTIME_SERVICES_CODE,
+  BOOT_MEM_RUNTIME_SERVICES_DATA,
+  BOOT_MEM_CONVENTIONAL,
+  BOOT_MEM_UNUSABLE,
+  BOOT_MEM_ACPI_RECLAIM,
+  BOOT_MEM_ACPI_NVS,
+  BOOT_MEM_MMIO,
+  BOOT_MEM_MMIO_PORT_SPACE,
+  BOOT_MEM_PAL_CODE,
+  BOOT_MEM_PERSISTENT,
+  BOOT_MEM_UNACCEPTED,
+};
+
 typedef struct {
   uint64_t map;             /* physical address of the EFI memory map */
   uint64_t map_size;        /* total size in bytes */

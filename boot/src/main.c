@@ -389,6 +389,7 @@ EFI_STATUS EFIAPI efi_main(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE *Syste
       __asm__ volatile ("cli; hlt");   /* can't report it any more */
   }
 
+
   KERNEL_ENTRY kernel_main = (KERNEL_ENTRY)kernel_entry;
   kernel_main(info);
 
